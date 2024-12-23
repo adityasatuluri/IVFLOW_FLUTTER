@@ -1,0 +1,24 @@
+npm install -g flutter
+
+flutter create frontend
+cd frontend
+
+dependencies:
+  flutter_blue_plus: ^1.34.5
+  permission_handler: ^11.3.1
+
+flutter pub get
+
+flutter run //test run
+
+Flutter run key commands.
+r Hot reload. 
+R Hot restart.
+h List all available interactive commands.
+d Detach (terminate "flutter run" but leave application running).
+c Clear the screen
+q Quit (terminate the application on the device).
+
+
+Links:
+https://protocoderspoint.com/ble-devices-in-flutter-bluetooth-low-energy/
