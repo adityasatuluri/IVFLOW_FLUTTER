@@ -1,4 +1,4 @@
-# ESP32 Scripts for IVFLOW_FLUTTER
+# ESP32 Scripts - IVFLOW
 
 This repository contains Arduino scripts for ESP32, developed as part of the IVFLOW_FLUTTER project. These scripts enable communication between an ESP32 microcontroller and a Flutter-based application via Bluetooth Low Energy (BLE). The scripts support various functionalities such as toggling lights, sending alphanumeric strings, and blinking LEDs.
 
