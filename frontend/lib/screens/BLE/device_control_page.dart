@@ -62,6 +62,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
 
     characteristic.setNotifyValue(true).catchError((error) {
       print("Error enabling notifications: $error");
+      return true;
     });
   }
 
