@@ -1,4 +1,4 @@
-# Frontend - IVFLOW
+# frontend
 
 ## Installation and Setup
 
