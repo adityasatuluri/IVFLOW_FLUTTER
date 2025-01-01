@@ -47,3 +47,5 @@
 ## Useful Links
 
 - [BLE Devices in Flutter - Bluetooth Low Energy Tutorial](https://protocoderspoint.com/ble-devices-in-flutter-bluetooth-low-energy/)
+
+- [Flutter SDK Installation Ttorial](https://www.youtube.com/watch?v=wvPVt6ubF4Q/)
