@@ -4,7 +4,6 @@ import 'dart:async';
 
 class DeviceControlPage extends StatefulWidget {
   final BluetoothDevice device;
-
   const DeviceControlPage({super.key, required this.device});
 
   @override
@@ -14,6 +13,9 @@ class DeviceControlPage extends StatefulWidget {
 class _DeviceControlPageState extends State<DeviceControlPage> {
   BluetoothCharacteristic? writeCharacteristic;
   StreamSubscription? bleSubscription;
+  final TextEditingController _ssidController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  bool _isConnected = false;
 
   @override
   void initState() {
@@ -21,7 +23,6 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     discoverServices();
   }
 
-  /// Discover the BLE services and characteristics
   void discoverServices() async {
     try {
       List<BluetoothService> services = await widget.device.discoverServices();
@@ -44,43 +45,50 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     }
   }
 
-  /// Subscribe to notifications from the characteristic
   void subscribeToNotifications(BluetoothCharacteristic characteristic) {
     bleSubscription = characteristic.value.listen((value) {
       final response = String.fromCharCodes(value);
       print("Received response: $response");
-
       if (mounted) {
         setState(() {
-          // Display the received response or handle accordingly
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text("Response: $response")),
           );
         });
       }
     });
-
     characteristic.setNotifyValue(true).catchError((error) {
       print("Error enabling notifications: $error");
       return true;
     });
   }
 
-  /// Send a value to the characteristic
-  void sendValue(String value) async {
+  void sendCredentials() async {
     if (writeCharacteristic != null) {
       try {
-        await writeCharacteristic!.write(value.codeUnits);
-        print("Value sent: $value");
+        String ssid = _ssidController.text;
+        String password = _passwordController.text;
+
+        if (ssid.isNotEmpty) {
+          await writeCharacteristic!.write("SSID:$ssid".codeUnits);
+          await Future.delayed(const Duration(milliseconds: 500));
+        }
+
+        if (password.isNotEmpty) {
+          await writeCharacteristic!.write("PASS:$password".codeUnits);
+          await Future.delayed(const Duration(milliseconds: 500));
+        }
+
+        await writeCharacteristic!.write("CONNECT".codeUnits);
+        setState(() {
+          _isConnected = !_isConnected;
+        });
       } catch (e) {
-        print("Error writing value: $e");
+        print("Error sending credentials: $e");
       }
-    } else {
-      print("Write characteristic not found!");
     }
   }
 
-  /// Disconnect the BLE device
   Future<void> disconnectDevice() async {
     try {
       await widget.device.disconnect();
@@ -94,7 +102,8 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
   void dispose() {
     bleSubscription?.cancel();
     bleSubscription = null;
-
+    _ssidController.dispose();
+    _passwordController.dispose();
     disconnectDevice();
     super.dispose();
   }
@@ -104,7 +113,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
     return WillPopScope(
       onWillPop: () async {
         await disconnectDevice();
-        return true; // Allow back navigation
+        return true;
       },
       child: Scaffold(
         appBar: AppBar(
@@ -114,44 +123,37 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
                 : "Unknown Device",
           ),
         ),
-        body: Center(
-          child: writeCharacteristic == null
-              ? const Text("Discovering services...")
-              : Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      ElevatedButton(
-                        onPressed: () => sendValue("1"),
-                        child: const Text("Send 1 (Turn On)"),
-                      ),
-                      ElevatedButton(
-                        onPressed: () => sendValue("0"),
-                        child: const Text("Send 0 (Turn Off)"),
-                      ),
-                      const SizedBox(height: 20),
-                      TextField(
-                        decoration: const InputDecoration(
-                          labelText: "Send Alphanumeric Value (A:...)",
-                        ),
-                        onSubmitted: (value) {
-                          if (value.isNotEmpty) sendValue("A:$value");
-                        },
-                      ),
-                      const SizedBox(height: 10),
-                      TextField(
-                        decoration: const InputDecoration(
-                          labelText: "Send Numeric Value (N:...)",
-                        ),
-                        keyboardType: TextInputType.number,
-                        onSubmitted: (value) {
-                          if (value.isNotEmpty) sendValue("N:$value");
-                        },
-                      ),
-                    ],
-                  ),
+        body: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TextField(
+                controller: _ssidController,
+                decoration: const InputDecoration(
+                  labelText: 'SSID',
+                  border: OutlineInputBorder(),
                 ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _passwordController,
+                decoration: const InputDecoration(
+                  labelText: 'Password',
+                  border: OutlineInputBorder(),
+                ),
+                obscureText: true,
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: writeCharacteristic != null ? sendCredentials : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _isConnected ? Colors.red : Colors.green,
+                ),
+                child: Text(_isConnected ? "Disconnect" : "Connect"),
+              ),
+            ],
+          ),
         ),
       ),
     );
