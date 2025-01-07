@@ -1,11 +1,11 @@
+require("dotenv").config();
 const { initializeApp } = require("firebase/app");
 const { getDatabase } = require("firebase/database");
 
 const firebaseConfig = {
-  apiKey: "AIzaSyD5QQt7HPAevwlgO9wMN8iHNrbNxx2bLak",
-  databaseURL:
-    "https://ivflow-50a87-default-rtdb.asia-southeast1.firebasedatabase.app/",
-  projectId: "ivflow-50a87",
+  apiKey: process.env.FIREBASE_API_KEY,
+  databaseURL: process.env.FIREBASE_DATABASE_URL,
+  projectId: process.env.FIREBASE_PROJECT_ID,
 };
 
 const app = initializeApp(firebaseConfig);
