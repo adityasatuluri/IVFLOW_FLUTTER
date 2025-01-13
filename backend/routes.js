@@ -67,7 +67,7 @@ router.get("/test", (req, res) => {
 // Update IV flow data route
 router.post("/ivflow", async (req, res) => {
   try {
-    const deviceId = req.body.device_id || req.query.deviceId || "device1";
+    const deviceId = req.body.device_id;
     const { flow_rate, alarm_status, monitoring_status } = req.body;
 
     if (

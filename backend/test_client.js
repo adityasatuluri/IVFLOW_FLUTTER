@@ -10,6 +10,7 @@ function generateRandomData() {
     flow_rate: Math.floor(Math.random() * 150),
     alarm_status: Math.random() < 0.5,
     monitoring_status: Math.random() < 0.5,
+    device_id: "ESP_32",
   };
 }
 
@@ -116,4 +117,4 @@ const runSessionFlow = async () => {
 sendData();
 
 // Run the session flow
-runSessionFlow();
+// runSessionFlow();

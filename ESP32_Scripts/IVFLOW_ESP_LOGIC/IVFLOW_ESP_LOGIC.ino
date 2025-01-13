@@ -14,6 +14,9 @@ String password = "";
 #define SERVICE_UUID "12345678-1234-1234-1234-123456789012"
 #define CHARACTERISTIC_UUID "87654321-4321-4321-4321-210987654321"
 
+// Fixed API URL
+const String API_URL = "https://ivflow-flutter.onrender.com/api/ivflow";
+
 bool deviceConnected = false;
 bool wifiConnected = false;
 
@@ -77,6 +80,11 @@ class MyCallbacks: public BLECharacteristicCallbacks {
 };
 
 void sendDataToAPI() {
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("Not connected to Wi-Fi. Skipping data transmission.");
+    return;
+  }
+
   HTTPClient http;
   
   // Generate random values
@@ -87,10 +95,10 @@ void sendDataToAPI() {
   // Prepare JSON payload
   String jsonPayload = "{\"flow_rate\":" + String(flow_rate) + 
                       ",\"alarm_status\":" + String(alarm_status) +
-                      ",\"device_id\":" + String(BLE_SERVER_NAME) + 
-                      ",\"monitoring_status\":" + String(monitoring_status) + "}";
+                      ",\"device_id\":\"" + BLE_SERVER_NAME + 
+                      "\",\"monitoring_status\":" + String(monitoring_status) + "}";
 
-  http.begin("https://ivflow-flutter.onrender.com/api/ivflow");
+  http.begin(API_URL);  // Using the fixed API URL
   http.addHeader("Content-Type", "application/json");
   
   int httpResponseCode = http.POST(jsonPayload);
