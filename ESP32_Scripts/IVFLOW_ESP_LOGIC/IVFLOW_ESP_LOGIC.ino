@@ -86,10 +86,11 @@ void sendDataToAPI() {
 
   // Prepare JSON payload
   String jsonPayload = "{\"flow_rate\":" + String(flow_rate) + 
-                      ",\"alarm_status\":" + String(alarm_status) + 
+                      ",\"alarm_status\":" + String(alarm_status) +
+                      ",\"device_id\":" + String(BLE_SERVER_NAME) + 
                       ",\"monitoring_status\":" + String(monitoring_status) + "}";
 
-  http.begin("http://localhost:3000/api/ivflow");
+  http.begin("https://ivflow-flutter.onrender.com/api/ivflow");
   http.addHeader("Content-Type", "application/json");
   
   int httpResponseCode = http.POST(jsonPayload);
@@ -134,5 +135,5 @@ void loop() {
   if (deviceConnected && wifiConnected && (millis() - lastSendTime > 5000)) {
     lastSendTime = millis();
     sendDataToAPI();
-  }`
+  }
 }
