@@ -9,7 +9,7 @@ router.post("/startsession", async (req, res) => {
     const sessionData = {
       caretaker_id: req.body.caretaker_id,
       centre_id: req.body.centre_id,
-      device_id: req.body.device_id,
+      device_id: "/device/" + req.body.device_id,
       patient_id: req.body.patient_id,
       start_time: new Date().toISOString(),
       alarms: [],

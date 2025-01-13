@@ -1,20 +1,21 @@
 const axios = require("axios");
-const { adminDb, admin } = require("./controllers/firebase_config"); // Importing configured Firebase instances
 
 // API endpoint configuration
 const API_URL = "http://localhost:3000/api/ivflow";
 
-// Function to generate random data
-function generateRandomData() {
-  return {
-    flow_rate: Math.floor(Math.random() * 150),
-    alarm_status: Math.random() < 0.5,
-    monitoring_status: Math.random() < 0.5,
-    device_id: "ESP_32",
-  };
-}
+// Session data (for now)
+const sessionData = {
+  caretaker_id: "/users/5vaMogv7m6Nki8x7QmHtp6ps1Uc2",
+  centre_id: "/centre/z46G4giBUSHDzMGsSazb",
+  device_id: "ESP32_BLE",
+  patient_id: "/users/RwVQVwwORlXclvep2Vc2uU0jwO2",
+  start_time: new Date().toISOString(),
+  alarms: [],
+  flow_rate: [],
+  end_time: null,
+};
 
-// Function to send data to API
+// Function to send data to the API
 async function sendData() {
   try {
     const payload = generateRandomData();
@@ -27,85 +28,54 @@ async function sendData() {
   }
 }
 
-// Helper function to get the current time in IST
-function getCurrentTime() {
-  return new Date().toLocaleString("en-US", {
-    timeZone: "Asia/Kolkata",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    hour: "numeric",
-    minute: "numeric",
-    second: "numeric",
-    timeZoneName: "short",
-  });
+// Helper function to generate random data
+function generateRandomData() {
+  return {
+    flow_rate: Math.floor(Math.random() * 150),
+    alarm_status: Math.random() < 0.5,
+    monitoring_status: Math.random() < 0.5,
+    device_id: "ESP_32",
+  };
 }
 
-// Function to create a new session
-const createSession = async () => {
-  const startTime = getCurrentTime();
-
-  const sessionData = {
-    alarms: [],
-    caretaker_id: "/users/5vaMogv7m6Nki8x7QmHtp6ps1Uc2",
-    centre_id: "/centre/z46G4giBUSHDzMGsSazb",
-    device_id: "/device/esp-001",
-    patient_id: "/users/RwVQVwwORlXclvep2Vc2uU0jwO2",
-    start_time: startTime,
-    flow_rate: [],
-    end_time: null,
-  };
-
+// Function to start a session using the API route
+async function startSession() {
   try {
-    const docRef = await admin
-      .firestore()
-      .collection("session")
-      .add(sessionData);
-    console.log("Session created with ID:", docRef.id);
-    return docRef.id;
+    const response = await axios.post(
+      "http://localhost:3000/api/startsession",
+      sessionData
+    );
+    console.log("Session started:", response.data);
+    return response.data.session_id; // Return session ID to use later
   } catch (error) {
-    console.error("Error creating session:", error);
-    throw error;
+    console.error("Error starting session:", error.message);
   }
-};
+}
 
-// Function to end an existing session
-const endSession = async (sessionId) => {
-  const endTime = getCurrentTime();
-
+// Function to stop the session using the API route
+async function stopSession(sessionId) {
   try {
-    // Retrieve flow rate from Realtime Database
-    const deviceId = "device1"; // Replace with dynamic device ID if required
-    const rtdbRef = adminDb.ref(`${deviceId}/iv flow`);
-    const snapshot = await rtdbRef.once("value");
-    const flowRate = snapshot.val();
-
-    // Update Firestore session with end time and flow rate
-    await admin
-      .firestore()
-      .collection("session")
-      .doc(sessionId)
-      .update({
-        end_time: endTime,
-        flow_rate: flowRate || [], // Ensure flow rate is not null
-      });
-
-    console.log("Session ended successfully");
+    const response = await axios.post(
+      `http://localhost:3000/api/stopsession/${sessionId}`,
+      {
+        device_id: "ESP32_BLE", // Replace with dynamic device ID if needed
+      }
+    );
+    console.log("Session stopped:", response.data);
   } catch (error) {
-    console.error("Error ending session:", error);
-    throw error;
+    console.error("Error stopping session:", error.message);
   }
-};
+}
 
 // Function to manage the session flow
 const runSessionFlow = async () => {
   try {
-    // Create a session
-    const sessionId = await createSession();
+    // Start the session
+    const sessionId = await startSession();
 
-    // Simulate a delay before ending the session
+    // Simulate a delay before stopping the session
     setTimeout(async () => {
-      await endSession(sessionId);
+      await stopSession(sessionId);
     }, 5000); // 5 seconds delay
   } catch (error) {
     console.error("Session flow error:", error);
@@ -117,4 +87,4 @@ const runSessionFlow = async () => {
 sendData();
 
 // Run the session flow
-// runSessionFlow();
+runSessionFlow();
