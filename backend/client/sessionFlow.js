@@ -1,13 +1,13 @@
 const axios = require("axios");
 
 // API endpoint configuration
-const API_URL = "http://localhost:3000/api/sessions/";
+const API_URL = "http://localhost:3000/api/";
 
 // Session data
 const sessionData = {
   caretaker_id: "/users/5vaMogv7m6Nki8x7QmHtp6ps1Uc2",
   centre_id: "/centre/z46G4giBUSHDzMGsSazb",
-  device_id: "ESP32_BLE",
+  device_id: "ADITYA",
   patient_id: "/users/RwVQVwwORlXclvep2Vc2uU0jwO2",
   alarms: [],
 };
@@ -15,7 +15,10 @@ const sessionData = {
 // Function to start a session
 async function startSession() {
   try {
-    const response = await axios.post(API_URL + "startsession", sessionData);
+    const response = await axios.post(
+      API_URL + "sessions/startsession",
+      sessionData
+    );
     console.log("Session started successfully:", response.data);
     return response.data.session_id; // Return session ID for further use
   } catch (error) {
@@ -30,9 +33,12 @@ async function startSession() {
 // Function to stop a session
 async function stopSession(sessionId) {
   try {
-    const response = await axios.post(`${API_URL}stopsession/${sessionId}`, {
-      device_id: "ESP32_BLE", // Replace with dynamic device ID if needed
-    });
+    const response = await axios.post(
+      `${API_URL}sessions/stopsession/${sessionId}`,
+      {
+        device_id: sessionData.device_id, // Replace with dynamic device ID if needed
+      }
+    );
     console.log("Session stopped successfully:", response.data);
   } catch (error) {
     console.error(
@@ -48,10 +54,7 @@ async function sendIVFlowData() {
   console.log("Sending payload:", payload);
 
   try {
-    const response = await axios.post(
-      "http://localhost:3000/api/ivflow",
-      payload
-    );
+    const response = await axios.post(API_URL + "ivflow", payload);
     console.log("Data sent successfully:", response.data);
   } catch (error) {
     console.error(
@@ -67,7 +70,7 @@ function generateRandomData() {
     flow_rate: Math.floor(Math.random() * 150),
     alarm_status: Math.random() < 0.5,
     monitoring_status: Math.random() < 0.5,
-    device_id: "ESP32_BLE",
+    device_id: sessionData.device_id,
   };
 }
 
@@ -84,7 +87,7 @@ async function runSessionFlow() {
     setTimeout(async () => {
       clearInterval(intervalId); // Stop sending data
       await stopSession(sessionId); // Stop the session
-    }, 10000); // 10 seconds
+    }, 20000); // 10 seconds
   } catch (error) {
     console.error("Session flow error:", error.message);
   }
