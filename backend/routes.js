@@ -117,4 +117,34 @@ router.post("/ivflow", async (req, res) => {
   }
 });
 
+// New route to get the latest IV flow value
+router.get("/ivflow/latest", async (req, res) => {
+  try {
+    const deviceId = req.query.deviceId;
+    if (!deviceId) {
+      return res.status(400).json({ error: "deviceId is required" });
+    }
+
+    const ivFlowRef = adminDb.ref(`${deviceId}/iv flow`);
+    const snapshot = await ivFlowRef.once("value");
+    const ivFlowArray = snapshot.val() || [];
+
+    if (!Array.isArray(ivFlowArray) || ivFlowArray.length === 0) {
+      return res.status(404).json({ error: "No IV flow data found" });
+    }
+
+    const latestIVFlow = ivFlowArray[0]; // Get the latest value (first element)
+
+    res.status(200).json({ latest_iv_flow: latestIVFlow });
+  } catch (error) {
+    console.error("Route error:", error);
+    res
+      .status(500)
+      .json({
+        error: "Failed to fetch latest IV flow",
+        details: error.message,
+      });
+  }
+});
+
 module.exports = router;

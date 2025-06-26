@@ -1,3 +1,5 @@
+# Change the IP Address in the app api url / if hosted locally
+
 # Frontend - IVFLOW
 
 ## Installation and Setup
@@ -28,6 +30,7 @@
 
    ```bash
    flutter pub get
+   flutter pub run flutter_launcher_icons:main # For overriding the launcher icons with our own in assets folder
    ```
 
 5. **Run the project:**

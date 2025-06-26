@@ -116,6 +116,7 @@ class _DeviceControlPageState extends State<DeviceControlPage> {
         return true;
       },
       child: Scaffold(
+        backgroundColor: Colors.grey[100],
         appBar: AppBar(
           title: Text(
             widget.device.name.isNotEmpty

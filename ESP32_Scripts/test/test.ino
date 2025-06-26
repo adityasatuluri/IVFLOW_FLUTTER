@@ -13,6 +13,20 @@ String password = "";
 #define SERVICE_UUID "12345678-1234-1234-1234-123456789012"
 #define CHARACTERISTIC_UUID "87654321-4321-4321-4321-210987654321"
 
+// Pin configuration
+const int sensorPin = 23;  // IR sensor output pin for ESP32 (change as needed)
+volatile int dropCount = 0;  // Store total number of drops detected
+unsigned long lastDropTime = 0;  // Track time of last detected drop
+// Constants for flow rate calculation
+const float dropFactor = 20.0;  // Example: IV set with 20 drops per mL
+const int calculationInterval = 6000;  // Calculate flow rate every 6 seconds (6000 ms)
+
+// Variables for flow rate calculation
+unsigned long lastCalculationTime = 0;
+float flowRate = 0.0;  // Flow rate in mL/hr
+
+
+
 const String API_URL = "https://ivflow-flutter.onrender.com/api/ivflow";
 
 bool deviceConnected = false;
@@ -21,6 +35,16 @@ bool wifiConnected = false;
 BLEServer *pServer = NULL;
 BLECharacteristic *pCharacteristic = NULL;
 unsigned long lastSendTime = 0;
+
+void IRAM_ATTR onDrop() {
+  unsigned long currentTime = millis();  // Get current time
+
+  // Ensure at least 100 ms between drops to prevent double-counting
+  if (currentTime - lastDropTime >= 100) {
+    dropCount++;  // Increment drop count
+    lastDropTime = currentTime;  // Update last drop time
+  }
+}
 
 class MyServerCallbacks: public BLEServerCallbacks {
     void onConnect(BLEServer* pServer) {
@@ -77,7 +101,7 @@ class MyCallbacks: public BLECharacteristicCallbacks {
     }
 };
 
-void sendDataToAPI() {
+void sendDataToAPI(int flowRate) {
   if (WiFi.status() != WL_CONNECTED) {
     Serial.println("Not connected to Wi-Fi. Skipping data transmission.");
     return;
@@ -85,9 +109,9 @@ void sendDataToAPI() {
 
   HTTPClient http;
   
-  int flow_rate = random(0, 150);
-  bool alarm_status = random(0, 2);
-  bool monitoring_status = random(0, 2);
+  int flow_rate = flowRate;
+  bool alarm_status = true;
+  bool monitoring_status = false;
 
   String jsonPayload = "{\"flow_rate\":" + String(flow_rate) + 
                       ",\"alarm_status\":" + String(alarm_status) +
@@ -111,7 +135,8 @@ void sendDataToAPI() {
 void setup() {
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, LOW);
-  
+  pinMode(sensorPin, INPUT);
+  attachInterrupt(sensorPin, onDrop, FALLING); 
   Serial.begin(115200);
   Serial.println("Starting BLE work!");
 
@@ -136,8 +161,26 @@ void setup() {
 }
 
 void loop() {
+  unsigned long currentTime = millis();
+
+  // Calculate flow rate every calculationInterval (6 seconds)
+  if (currentTime - lastCalculationTime >= calculationInterval) {
+    noInterrupts();  // Disable interrupts for safe access to dropCount
+    int drops = dropCount;  // Get current drop count
+    dropCount = 0;  // Reset drop count for next interval
+    interrupts();  // Re-enable interrupts
+
+    // Calculate flow rate in mL/hr
+    flowRate = (drops / dropFactor) * (3600.0 / (calculationInterval / 1000.0));
+
+    // Display flow rate
+    Serial.print("Flow Rate: ");
+    Serial.println(flowRate);
+    lastCalculationTime = currentTime;
+  }
+
   if (deviceConnected && wifiConnected && (millis() - lastSendTime > 5000)) {
     lastSendTime = millis();
-    sendDataToAPI();
+    sendDataToAPI(flowRate);
   }
 }

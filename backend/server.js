@@ -3,6 +3,7 @@ const cors = require("cors");
 const sessionRoutes = require("./routes/sessionRoutes");
 const ivFlowRoutes = require("./routes/ivFlowRoutes");
 const testRoutes = require("./routes/testRoutes");
+const customRoutes = require("./routes"); // Import routes.js
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -15,6 +16,7 @@ app.use(express.json());
 app.use("/api/sessions", sessionRoutes);
 app.use("/api/ivflow", ivFlowRoutes);
 app.use("/api/test", testRoutes);
+app.use("/api", customRoutes); // Mount routes.js under /api
 
 // Error handling middleware
 app.use((err, req, res, next) => {

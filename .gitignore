@@ -1,4 +1,4 @@
 # Ignore libraries folder
 ESP32_Scripts/libraries/
-
 node_modules/
+Registry/

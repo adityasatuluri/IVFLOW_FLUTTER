@@ -75,6 +75,7 @@ class _DeviceScannerPageState extends State<DeviceScannerPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[100],
       appBar: AppBar(
         title: const Text('BLE Device Scanner'),
         actions: [
